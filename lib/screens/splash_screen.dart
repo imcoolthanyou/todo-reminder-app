@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// loading screen while app starts up
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
@@ -7,7 +8,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
-        child: CircularProgressIndicator(),
+        child: CircularProgressIndicator(), // spinner thingy
       ),
     );
   }

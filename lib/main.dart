@@ -4,26 +4,35 @@ import 'package:myapp/providers/auth_providers.dart';
 import 'package:myapp/screens/auth_screen.dart';
 import 'package:myapp/screens/home_screen.dart';
 import 'package:myapp/screens/splash_screen.dart';
-import 'package:myapp/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-final notificationService = NotificationService();
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await notificationService.init();
 
-  //initalizing the supabase
+  // load env vars first
+  await dotenv.load(fileName: ".env");
 
-  await Supabase.initialize(
-    url: "https://hmeltfimvgcxldxicqet.supabase.co",
-    anonKey:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtZWx0ZmltdmdjeGxkeGljcWV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNjc3OTYsImV4cCI6MjA3MjY0Mzc5Nn0.DW6sDOcQWCQxxNkOKojhYFNyLJ58h3lrlMqod-EJICI",
+  // init firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(ProviderScope(child: MyApp()));
+  // setup supabase
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+  );
+
+  runApp(const ProviderScope(child: MyApp()));
 }
 
-final supabase = Supabase.instance.client;
+
+final supabase = Supabase.instance.client; // global supabase instance
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -34,23 +43,24 @@ class MyApp extends ConsumerWidget {
 
     return MaterialApp(
       title: 'Todo Reminder App',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.light(
         useMaterial3: true,
       ).copyWith(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
-      // Use the authState to decide which screen to show
+
       home: authState.when(
         data: (session) {
           if (session != null) {
-            // User is logged in, show HomeScreen
+            // user logged in, save fcm token
+            ref.read(authApiProvider).saveFCMToken();
             return const HomeScreen();
           } else {
-            // User is not logged in, show AuthScreen
+            // not logged in
             return const AuthScreen();
           }
         },
-        // Show a loading screen while checking auth state
-        loading: () => const SplashScreen(),
-        // Show an error screen if something goes wrong
+        loading: () => const SplashScreen(), // loading state
+        // error screen if something breaks
         error: (error, stackTrace) =>
             Scaffold(body: Center(child: Text('Error: $error'))),
       ),

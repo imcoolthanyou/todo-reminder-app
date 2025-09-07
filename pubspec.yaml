@@ -40,11 +40,15 @@ dependencies:
   # For native Google Sign-In
   google_sign_in: ^6.2.1
 
-  # For scheduling local notifications
-  flutter_local_notifications: ^17.0.0
+  # firebase stuff
+  firebase_core: ^3.1.0
+  firebase_messaging: ^15.0.1
   
   # For formatting dates and times
   intl: ^0.19.0
+  
+  # env vars
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -99,3 +103,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  # include env file
+  assets:
+    - .env

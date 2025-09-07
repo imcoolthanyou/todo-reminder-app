@@ -3,15 +3,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:myapp/main.dart';
 import 'package:myapp/utils/error_snackbar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AuthApi {
-  static const webApiClient =
-      "526652825327-p9d9lk3bub424n7orj38lr8ngp6a280g.apps.googleusercontent.com";
-
   Future<void> googleSignIn(BuildContext context) async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: webApiClient,
+        serverClientId: dotenv.env['GOOGLE_WEB_CLIENT_ID']!,
       );
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
@@ -38,5 +37,15 @@ class AuthApi {
 
   Future<void> signOut() async {
     await supabase.auth.signOut();
+  }
+
+  Future<void> saveFCMToken() async {
+    final fcmToken = await FirebaseMessaging.instance.getToken();
+    if (fcmToken != null) {
+      await supabase.from('profiles').upsert({
+        'id': supabase.auth.currentUser!.id,
+        'fcm_token': fcmToken,
+      });
+    }
   }
 }

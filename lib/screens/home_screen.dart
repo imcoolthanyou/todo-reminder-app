@@ -11,7 +11,7 @@ class HomeScreen extends ConsumerWidget {
 
   void _showAddTodoDialog(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController();
-    // Set a default deadline for 1 hour from now
+    // default 1hr from now
     DateTime selectedDateTime = DateTime.now().add(const Duration(hours: 1));
 
     showDialog(
@@ -37,13 +37,13 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   Row(
                     children: [
-                      // Display the selected date and time
+                      // show selected date/time
                       Expanded(
                         child: Text(
                           DateFormat.yMMMd().add_jm().format(selectedDateTime),
                         ),
                       ),
-                      // Button to trigger the pickers
+                      // btn to open pickers
                       IconButton(
                         icon: const Icon(Icons.edit_calendar_outlined),
                         onPressed: () async {
@@ -56,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           );
 
-                          if (pickedDate == null) return; // User canceled
+                          if (pickedDate == null) return; // cancelled
 
                           final pickedTime = await showTimePicker(
                             context: context,
@@ -65,7 +65,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           );
 
-                          if (pickedTime == null) return; // User canceled
+                          if (pickedTime == null) return; // cancelled
 
                           setState(() {
                             selectedDateTime = DateTime(
@@ -90,20 +90,11 @@ class HomeScreen extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () async {
                     if (titleController.text.isNotEmpty) {
-                      final newTodo = await ref.read(todosApiProvider).addTodo(
-                            title: titleController.text,
-                            // Use the DateTime selected by the user
-                            deadline: selectedDateTime,
-                          );
-                try {
-                  await notificationService.scheduleTodoNotification(
-                 id: newTodo['id'],
-                  title: newTodo['title'],
-               deadline: DateTime.parse(newTodo['deadline']),
-               );
-              } catch (e) {
-               print('Error scheduling notification: $e');//for debugging purpose
-              }
+                      await ref.read(todosApiProvider).addTodo(
+                        title: titleController.text,
+                        // use selected datetime
+                        deadline: selectedDateTime,
+                      );
 
                       ref.refresh(todosProvider);
                       Navigator.of(context).pop();
@@ -120,10 +111,10 @@ class HomeScreen extends ConsumerWidget {
   }
 
   void _showDeleteConfirmationDialog(
-    BuildContext context,
-    WidgetRef ref,
-    int todoId,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      int todoId,
+      ) {
     showDialog(
       context: context,
       builder: (context) {
@@ -138,10 +129,9 @@ class HomeScreen extends ConsumerWidget {
             TextButton(
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               onPressed: () async {
-                await notificationService.cancelNotification(todoId);
                 await ref.read(todosApiProvider).deleteTodo(todoId);
                 ref.refresh(todosProvider);
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop(); // close dialog
               },
               child: const Text('Delete'),
             ),
@@ -152,12 +142,12 @@ class HomeScreen extends ConsumerWidget {
   }
 
   void _showEditTodoDialog(
-    BuildContext context,
-    WidgetRef ref,
-    Map<String, dynamic> todo,
-  ) {
+      BuildContext context,
+      WidgetRef ref,
+      Map<String, dynamic> todo,
+      ) {
     final titleController = TextEditingController(text: todo['title']);
-    // Use the existing deadline as the initial value
+    // use existing deadline
     DateTime selectedDateTime = DateTime.parse(todo['deadline']);
 
     showDialog(
@@ -186,7 +176,7 @@ class HomeScreen extends ConsumerWidget {
                             .add_jm()
                             .format(selectedDateTime)),
                       ),
-                      // Button to trigger the pickers
+                      // btn for pickers
                       IconButton(
                         icon: const Icon(Icons.edit_calendar_outlined),
                         onPressed: () async {
@@ -195,18 +185,18 @@ class HomeScreen extends ConsumerWidget {
                             initialDate: selectedDateTime,
                             firstDate: DateTime.now(),
                             lastDate:
-                                DateTime.now().add(const Duration(days: 365)),
+                            DateTime.now().add(const Duration(days: 365)),
                           );
 
-                          if (pickedDate == null) return; // User canceled
+                          if (pickedDate == null) return; // cancelled
 
                           final pickedTime = await showTimePicker(
                             context: context,
                             initialTime:
-                                TimeOfDay.fromDateTime(selectedDateTime),
+                            TimeOfDay.fromDateTime(selectedDateTime),
                           );
 
-                          if (pickedTime == null) return; // User canceled
+                          if (pickedTime == null) return; // cancelled
 
                           setState(() {
                             selectedDateTime = DateTime(
@@ -230,25 +220,11 @@ class HomeScreen extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () async {
                     if (titleController.text.isNotEmpty) {
-                      await notificationService.cancelNotification(todo['id']);
-
-                      final updatedTodo =
-                          await ref.read(todosApiProvider).updateTodo(
-                                id: todo['id'],
-                                title: titleController.text,
-                                deadline: selectedDateTime,
-                              );
-
-                        try {
-      await notificationService.cancelNotification(todo['id']);
-      await notificationService.scheduleTodoNotification(
-        id: updatedTodo['id'],
-        title: updatedTodo['title'],
-        deadline: DateTime.parse(updatedTodo['deadline']),
-      );
-    } catch (e) {
-      print('Error re-scheduling notification: $e');//for debugging purposes
-    }
+                      await ref.read(todosApiProvider).updateTodo(
+                        id: todo['id'],
+                        title: titleController.text,
+                        deadline: selectedDateTime,
+                      );
 
                       ref.refresh(todosProvider);
                       Navigator.of(context).pop();
@@ -272,6 +248,14 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('My Todos'),
         actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Text(
+                'Welcome, ${supabase.auth.currentUser?.userMetadata?['full_name'] ?? 'User'}',
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: CircleAvatar(
@@ -320,7 +304,7 @@ class HomeScreen extends ConsumerWidget {
 
               return Card(
                 margin:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 elevation: 2,
                 child: CheckboxListTile(
                   value: isCompleted,
@@ -352,7 +336,8 @@ class HomeScreen extends ConsumerWidget {
                       IconButton(
                         icon: Icon(Icons.delete, color: Colors.red.shade300),
                         onPressed: () {
-                          _showDeleteConfirmationDialog(context, ref, todo['id']);
+                          _showDeleteConfirmationDialog(
+                              context, ref, todo['id']);
                         },
                       ),
                     ],

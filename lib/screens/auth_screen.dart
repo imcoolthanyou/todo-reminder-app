@@ -12,7 +12,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  bool _isLoading = false;
+  bool _isLoading = false; // show spinner when signing in
 
   void _signIn() async {
     setState(() {
@@ -36,13 +36,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       ),
       body: Center(
         child: _isLoading
-            ? const CircularProgressIndicator()
+            ? const CircularProgressIndicator() // loading spinner
             : ElevatedButton.icon(
-                onPressed: _signIn,
+          onPressed: _signIn,
                 icon: const Icon(Icons.login),
                 label: const Text('Sign in with Google'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
               ),
       ),

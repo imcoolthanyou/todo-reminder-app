@@ -1,6 +1,7 @@
 import 'package:myapp/main.dart';
 
 class TodosApi {
+  // stream of todos for current user
   Stream<List<Map<String, dynamic>>> getTodosStream() {
     final userId = supabase.auth.currentUser!.id;
     return supabase
@@ -10,35 +11,34 @@ class TodosApi {
         .order('created_at', ascending: false);
   }
 
- Future<Map<String, dynamic>> addTodo({
-  required String title,
-  required DateTime deadline,
-}) async {
-  final userId = supabase.auth.currentUser!.id;
+  // add new todo
+  Future<void> addTodo({
+    required String title,
+    required DateTime deadline,
+  }) async {
+    final userId = supabase.auth.currentUser!.id;
+    await supabase.from('todos').insert({
+      'title': title,
+      'deadline': deadline.toIso8601String(),
+      'user_id': userId,
+    });
+  }
 
-
-  final newTodo = await supabase.from('todos').insert({
-    'title': title,
-    'deadline': deadline.toIso8601String(),
-    'user_id': userId,
-  }).select().single();
-
-  return newTodo;
-}
-
+  // get todos as future (not stream)
   Future<List<Map<String, dynamic>>> getTodosFuture() async {
     final userId = supabase.auth.currentUser!.id;
     final data = await supabase
         .from('todos')
-        .select() // Use select() instead of stream()
+        .select() // using select instead of stream
         .eq('user_id', userId)
         .order('created_at', ascending: false);
     return data;
   }
 
-Future<Map<String, dynamic>> updateTodo({
+  // update existing todo
+  Future<void> updateTodo({
     required int id,
-    String? title, 
+    String? title,
     DateTime? deadline,
     bool? isCompleted,
   }) async {
@@ -47,15 +47,10 @@ Future<Map<String, dynamic>> updateTodo({
     if (deadline != null) updates['deadline'] = deadline.toIso8601String();
     if (isCompleted != null) updates['is_completed'] = isCompleted;
 
-    final updatedTodo = await supabase
-        .from('todos')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-    return updatedTodo;
+    await supabase.from('todos').update(updates).eq('id', id);
   }
 
+  // delete todo
   Future<void> deleteTodo(int id) async {
     await supabase.from('todos').delete().eq('id', id);
   }
