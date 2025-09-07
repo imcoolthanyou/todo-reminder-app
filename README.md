@@ -1,4 +1,5 @@
 Todo Reminder App
+![Image](https://github.com/user-attachments/assets/006d0358-df20-4f85-adfe-ae7e914adaf7)
 A simple yet powerful Todo Reminder application built for an internship assignment. It allows users to manage their daily tasks with a clean interface, secure authentication, and a robust serverless backend.
 
 Key Features
